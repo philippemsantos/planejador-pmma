@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Operações — Concurso PMMA 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2F1FA;
+    --bg-2:#FFFFFF;
+    --panel:#FFFFFF;
+    --panel-2:#F7F6FD;
+    --line:#E7E4F5;
+    --line-soft:#EFEDFA;
+    --ink:#211D33;
+    --purple:#6C5CE7;
+    --purple-dark:#4E3FCF;
+    --purple-soft:#EDEAFB;
+    --purple-soft-2:#E1DCFB;
+    --blue-soft:#E3ECFD;
+    --pink-soft:#FBE6EE;
+    --pink-ink:#C24E77;
+    --amber-soft:#FDF0DC;
+    --amber-ink:#B8791A;
+    --green-soft:#E1F6EC;
+    --green-ink:#1E9E6B;
+    --accent:#6C5CE7;
+    --accent-dim:#8577EA;
+    --brass:#B8791A;
+    --danger:#E8604C;
+    --text:#211D33;
+    --text-dim:#6E6980;
+    --text-faint:#A6A1B8;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(33,29,51,.04), 0 8px 24px rgba(33,29,51,.05);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--purple);color:#fff;}
+  h1,h2,h3,h4{font-family:'Inter',sans-serif;margin:0;font-weight:700;color:var(--ink);}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:var(--purple);}
+  button{font-family:'Inter',sans-serif;cursor:pointer;}
+  input,textarea,select{font-family:'Inter',sans-serif;background:#fff;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(108,92,231,.12);}
+
+  /* ===== Shell ===== */
+  #shell{display:flex;min-height:100vh;}
+  #sidebar{width:230px;flex-shrink:0;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 0;}
+  #sidebar .brand{padding:0 20px 18px;border-bottom:1px solid var(--line);margin-bottom:6px;}
+  #sidebar .brand .tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:.15em;font-weight:700;}
+  #sidebar .brand h1{font-size:19px;line-height:1.15;margin-top:5px;color:var(--ink);}
+  #sidebar .brand .sub{font-size:11.5px;color:var(--text-faint);margin-top:5px;letter-spacing:.02em;}
+  nav.tabs{display:flex;flex-direction:column;margin-top:8px;padding:0 10px;}
+  nav.tabs button{background:none;border:none;text-align:left;color:var(--text-dim);padding:10px 12px;font-size:13px;letter-spacing:.01em;border-radius:8px;transition:all .12s;font-family:'Inter',sans-serif;font-weight:500;margin-bottom:2px;}
+  nav.tabs button:hover{color:var(--ink);background:var(--panel-2);}
+  nav.tabs button.active{color:#fff;background:var(--purple);font-weight:600;}
+  #sidebar .foot{margin-top:auto;padding:16px 20px 0;border-top:1px solid var(--line);font-size:10.5px;color:var(--text-faint);line-height:1.6;}
+
+  #main{flex:1;min-width:0;}
+  #hud{background:#fff;border-bottom:1px solid var(--line);padding:18px 32px;display:flex;align-items:center;gap:36px;flex-wrap:wrap;}
+  .hud-clock{display:flex;align-items:baseline;gap:10px;}
+  .hud-clock .num{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:var(--purple);line-height:1;letter-spacing:-1px;}
+  .hud-clock .lbl{font-size:11px;color:var(--text-dim);letter-spacing:.03em;line-height:1.3;}
+  .hud-seg{flex:1;min-width:220px;}
+  .hud-seg .row{display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-bottom:6px;font-weight:500;}
+  .segbar{display:flex;height:8px;gap:2px;}
+  .segbar .seg{flex:1;background:var(--line-soft);border-radius:2px;position:relative;overflow:hidden;}
+  .segbar .seg.filled{background:var(--purple-soft-2);}
+  .segbar .seg.current{background:var(--purple);}
+  .hud-stat{text-align:right;}
+  .hud-stat .num{font-family:'JetBrains Mono',monospace;font-size:21px;color:var(--ink);font-weight:700;}
+  .hud-stat .lbl{font-size:10.5px;color:var(--text-faint);}
+
+  #content{padding:28px 32px 60px;max-width:1160px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow);}
+  .panel h2{font-size:15.5px;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:8px;font-weight:700;}
+  .panel h2 .dot{width:7px;height:7px;background:var(--purple);border-radius:50%;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  @media (max-width:820px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  .badge{display:inline-block;font-size:10px;padding:4px 9px;border-radius:20px;font-weight:600;}
+  .b-estudo{background:var(--purple-soft);color:var(--purple-dark);}
+  .b-questoes{background:var(--blue-soft);color:#3D6FC9;}
+  .b-legislacao{background:var(--pink-soft);color:var(--pink-ink);}
+  .b-revisao{background:var(--amber-soft);color:var(--amber-ink);}
+  .b-simulado{background:#FDE6E1;color:#C1442E;}
+  .b-descanso{background:var(--panel-2);color:var(--text-dim);}
+  .b-exame{background:var(--ink);color:#fff;}
+  .b-atrasado{background:#FDE0DA;color:#C1442E;}
+
+  /* ===== Checklist recolhível ===== */
+  .subj-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;}
+  .subj-head .chev{font-size:11px;color:var(--text-faint);transition:transform .15s;margin-left:8px;}
+  .subj-head.open .chev{transform:rotate(90deg);}
+  .subj-topics{overflow:hidden;max-height:0;transition:max-height .2s ease;}
+  .subj-topics.open{max-height:900px;}
+
+  /* ===== Tabelas responsivas ===== */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .table-wrap table{min-width:520px;}
+
+  /* ===== Mobile ===== */
+  @media (max-width:760px){
+    #shell{flex-direction:column;}
+    #sidebar{width:100%;flex-direction:row;align-items:center;padding:12px 10px;gap:10px;}
+    #sidebar .brand{border-bottom:none;margin-bottom:0;padding:0;flex-shrink:0;}
+    #sidebar .brand h1{font-size:14px;line-height:1.1;}
+    #sidebar .brand .sub,#sidebar .foot{display:none;}
+    nav.tabs{flex-direction:row;margin-top:0;padding:0;gap:4px;overflow-x:auto;flex:1;}
+    nav.tabs button{white-space:nowrap;padding:8px 10px;font-size:11.5px;margin-bottom:0;}
+    #content{padding:14px 14px 40px;}
+    #hud{padding:14px 16px;gap:14px;}
+    .hud-clock .num{font-size:30px;}
+    .hud-seg{min-width:140px;}
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .formrow{flex-direction:column;align-items:stretch;}
+    .formrow .field{width:100% !important;}
+    .panel{padding:16px;}
+    .week-nav{flex-direction:column;align-items:flex-start;}
+    .week-nav .btns{width:100%;}
+    .week-nav .btns button{flex:1;}
+  }
+
+  /* ===== Kanban semanal (estilo DSO Tutory) ===== */
+  .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+  .week-nav .range{font-size:16px;font-weight:700;color:var(--ink);}
+  .week-nav .sub{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+  .week-nav .btns{display:flex;gap:8px;}
+  .viewtoggle-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .kanban{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:start;}
+  @media (max-width:980px){.kanban{grid-template-columns:1fr;}}
+  .kcol{background:var(--panel-2);border-radius:12px;min-height:100px;display:flex;flex-direction:column;overflow:hidden;}
+  .kcol.weekend{background:#F1EFFB;}
+  .kcol .khead{padding:9px 4px;text-align:center;background:#EAE8F4;}
+  .kcol.today .khead{background:var(--ink);}
+  .kcol .khead .dow{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);font-weight:700;}
+  .kcol.today .khead .dow{color:#D9D5FF;}
+  .kcol .khead .ddate{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--ink);font-weight:700;}
+  .kcol.today .khead .ddate{color:#fff;}
+  .kcol .khead .dtime{font-size:9.5px;color:var(--text-faint);margin-top:1px;}
+  .kcol.today .khead .dtime{color:#A9A2E8;}
+  .kcol .kbody{padding:7px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .kblock{background:var(--purple-soft);border-radius:9px;padding:9px 10px 10px;cursor:pointer;transition:transform .1s, box-shadow .1s;box-shadow:0 1px 1px rgba(33,29,51,.03);}
+  .kblock:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(33,29,51,.09);}
+  .kblock.done{opacity:.5;}
+  .kblock.done .ktitle{text-decoration:line-through;}
+  .kblock.k-QUESTOES{background:var(--blue-soft);}
+  .kblock.k-LEGISLACAO{background:var(--pink-soft);}
+  .kblock.k-LEGISLACAO.today-card{background:var(--ink);}
+  .kblock.k-LEGISLACAO.today-card .ktitle,.kblock.k-LEGISLACAO.today-card .ksub{color:#EDEAFB;}
+  .kblock.k-REVISAO{background:var(--amber-soft);}
+  .kblock.k-SIMULADO{background:#FDE0DA;}
+  .kblock.k-DESCANSO{background:var(--panel-2);}
+  .kblock.k-EXAME{background:var(--ink);}
+  .kblock.k-EXAME .ktitle,.kblock.k-EXAME .ksub{color:#fff;}
+  .kblock.highlight{background:var(--purple);}
+  .kblock.highlight .ktitle{color:#fff;font-weight:600;}
+  .kblock.highlight .ksub{color:#D9D5FF;}
+  .kblock.highlight .ktime{background:rgba(255,255,255,.22);color:#fff;}
+  .kblock .khkind{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;}
+  .kblock .ktime{font-family:'JetBrains Mono',monospace;font-size:9px;color:#fff;background:var(--ink);padding:2px 7px;border-radius:20px;white-space:nowrap;margin-top:auto;display:inline-block;font-weight:600;}
+  .kblock .ktitle{font-size:11.5px;color:var(--ink);line-height:1.35;font-weight:600;margin-bottom:3px;}
+  .kblock .ksub{font-size:10px;color:var(--text-dim);margin-bottom:8px;line-height:1.3;}
+  .kblock .kcheck{display:none;}
+
+  .daterow{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .daterow:last-child{border-bottom:none;}
+  .daterow.today{background:var(--purple-soft);border-radius:8px;}
+  .daterow .d{font-family:'JetBrains Mono',monospace;color:var(--text-dim);width:82px;flex-shrink:0;font-weight:600;}
+  .daterow .lbl{flex:1;color:var(--ink);}
+  .daterow small{color:var(--text-faint);display:block;font-size:10.5px;}
+  .chip{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;cursor:pointer;background:#fff;}
+  .chip.done{background:var(--purple);border-color:var(--purple);}
+
+  .month-head{font-size:12.5px;letter-spacing:.04em;color:var(--purple);text-transform:uppercase;margin:22px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--line);font-weight:700;}
+  .month-head:first-child{margin-top:0;}
+
+  .subj-block{margin-bottom:16px;}
+  .subj-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .subj-title .name{font-size:13px;font-weight:600;color:var(--ink);}
+  .subj-title .pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);}
+  .bar{height:6px;background:var(--line-soft);border-radius:20px;margin-bottom:10px;overflow:hidden;}
+  .bar > div{height:100%;border-radius:20px;}
+  .topic-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:12.5px;color:var(--text-dim);}
+  .topic-row.studied{color:var(--ink);}
+  .topic-row .idx{font-family:'JetBrains Mono',monospace;color:var(--text-faint);width:20px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;color:var(--text-faint);font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.05em;padding:8px;border-bottom:1px solid var(--line);}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);color:var(--text-dim);}
+  tr:hover td{color:var(--ink);}
+
+  .formrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .btn{background:var(--purple);color:#fff;border:none;padding:10px 18px;font-size:12.5px;font-weight:600;border-radius:24px;}
+  .btn:hover{background:var(--purple-dark);}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--text-dim);padding:8px 16px;font-size:12px;border-radius:24px;font-weight:500;}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--purple);}
+  .btn-danger{background:none;border:1px solid #F3C9C0;color:#C1442E;padding:5px 10px;font-size:10.5px;border-radius:20px;}
+
+  .card{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--purple-soft-2);padding:12px 14px;margin-bottom:10px;border-radius:10px;}
+  .card.overdue{border-left-color:var(--danger);background:#FDF1EF;}
+  .card .meta{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;font-weight:600;}
+  .card p{margin:2px 0;font-size:12.5px;color:var(--text-dim);}
+  .card p strong{color:var(--ink);}
+  .empty{color:var(--text-faint);font-size:12.5px;font-style:italic;padding:10px 0;}
+
+  textarea.notes{width:100%;min-height:340px;resize:vertical;line-height:1.6;font-size:13px;}
+  .strategy p, .strategy li{color:var(--text-dim);font-size:13px;line-height:1.7;}
+  .strategy h3{font-size:13.5px;color:var(--purple-dark);margin:18px 0 8px;font-weight:700;}
+  .strategy h3:first-child{margin-top:0;}
+  .strategy ul{margin:0;padding-left:18px;}
+  .strategy strong{color:var(--ink);}
+
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:#D8D4EE;border-radius:20px;}
+</style>
+</head>
+<body>
+<div id="shell">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="tag">SEAD/MA · CEBRASPE</div>
+      <h1>Painel de<br>Operações</h1>
+      <div class="sub">Soldado QP — PMMA 2026</div>
+    </div>
+    <nav class="tabs" id="navTabs"></nav>
+    <div class="foot">Edital nº 1 – PMMA<br>10/07/2026 · Cargo 1 (QP)<br>Dados salvos neste navegador.</div>
+  </aside>
+
+  <main id="main">
+    <div id="hud"></div>
+    <div id="content">
+      <div class="tab-content active" id="tab-dashboard"></div>
+      <div class="tab-content" id="tab-cronograma"></div>
+      <div class="tab-content" id="tab-checklist"></div>
+      <div class="tab-content" id="tab-revisoes"></div>
+      <div class="tab-content" id="tab-horas"></div>
+      <div class="tab-content" id="tab-questoes"></div>
+      <div class="tab-content" id="tab-erros"></div>
+      <div class="tab-content" id="tab-simulados"></div>
+      <div class="tab-content" id="tab-estrategia"></div>
+      <div class="tab-content" id="tab-notas"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   DADOS BASE — currículo derivado do Edital nº1 PMMA 2026
+   ========================================================= */
+const EXAM_DATE = '2026-10-11';
+const START_DATE = '2026-07-14';
+const RETA_FINAL_START = '2026-10-01';
+
+const SUBJECTS = {
+  LP: { name:"Língua Portuguesa", short:"LP", color:"#9CB380", weekday:1, topics:[
+    "Compreensão e interpretação de textos (gêneros variados)",
+    "Tipos e gêneros textuais",
+    "Ortografia oficial",
+    "Coesão textual: referenciação, substituição, repetição",
+    "Conectores e sequenciação textual",
+    "Emprego de tempos e modos verbais",
+    "Classes de palavras",
+    "Coordenação entre orações e termos",
+    "Subordinação entre orações e termos",
+    "Pontuação",
+    "Concordância verbal e nominal",
+    "Regência verbal e nominal / crase",
+    "Colocação pronominal e reescrita de frases"
+  ]},
+  LI: { name:"Legislação Institucional (Estatuto PM — Lei 6.513/1995)", short:"LI", color:"#C9A227", weekday:2, topics:[
+    "Disposições preliminares, hierarquia e disciplina militar",
+    "Ingresso, quadros e promoções",
+    "Direitos e vantagens dos policiais militares",
+    "Deveres, ética e conduta militar",
+    "Situação de inatividade (reserva remunerada e reforma)",
+    "Justiça e disciplina — conselhos e sindicâncias",
+    "Disposições gerais, transitórias e leis correlatas (10.823/2018, 14.751/2023, Dec. 88.777/1983, CPM)"
+  ]},
+  INF: { name:"Noções de Informática", short:"INF", color:"#7FA7C9", weekday:3, topics:[
+    "Sistemas operacionais — Windows e Linux",
+    "Edição de textos, planilhas e apresentações (MS Office / BrOffice)",
+    "Redes de computadores, internet e intranet",
+    "Navegadores e programas de correio eletrônico",
+    "Busca na internet, grupos de discussão e redes sociais",
+    "Organização de arquivos, pastas e computação em nuvem",
+    "Segurança da informação: vírus, backup, antivírus e firewall"
+  ]},
+  GB: { name:"Geografia do Brasil", short:"GB", color:"#8FBF9F", weekday:4, topics:[
+    "Internacionalização da economia brasileira",
+    "Industrialização e organização do espaço",
+    "Rede brasileira de transportes",
+    "Estrutura urbana e grandes metrópoles",
+    "Fronteiras agrícolas: Centro-Oeste e Amazônia",
+    "Estrutura fundiária e problemas demográficos",
+    "Movimentos migratórios internos",
+    "População brasileira: distribuição, crescimento, estrutura etária",
+    "Recursos naturais: aproveitamento e conservação"
+  ]},
+  GM: { name:"Geografia do Maranhão", short:"GM", color:"#6FBFB0", weekday:4, topics:[
+    "Localização, limites, fronteiras e áreas de proteção ambiental",
+    "Parques nacionais do Maranhão",
+    "Clima: pluviosidade e temperatura",
+    "Geomorfologia e classificação do relevo",
+    "Bacias dos rios limítrofes (Parnaíba, Gurupi, Tocantins-Araguaia)",
+    "Bacias dos rios genuinamente maranhenses",
+    "Formações vegetais: floresta, cerrado e cocais",
+    "Geografia da população e povoamento",
+    "Agricultura e pecuária maranhense",
+    "Extrativismo vegetal, animal e mineral",
+    "Parque industrial: base e transformação",
+    "Setor terciário, malha viária, portos e aeroportos",
+    "Cultura maranhense"
+  ]},
+  HB: { name:"História do Brasil", short:"HB", color:"#C98F6F", weekday:5, topics:[
+    "Contribuição indígena e negra na formação do Brasil",
+    "República Velha e estruturas oligárquicas",
+    "Economia cafeeira e estratificação social",
+    "Revolução de 1930",
+    "Era Vargas: política, economia e sociedade",
+    "Período democrático (1945–1964) e Constituição de 1946",
+    "Política de industrialização do governo JK",
+    "Crise do regime democrático e Golpe de 1964",
+    "Crise do regime militar e redemocratização",
+    "O Brasil político: nação e território",
+    "Organização do Estado Brasileiro e as Constituições"
+  ]},
+  HM: { name:"História do Maranhão", short:"HM", color:"#C9A66F", weekday:5, topics:[
+    "França Equinocial: expedição de Daniel de La Touche",
+    "Fundação de São Luís",
+    "Batalha de Guaxenduba",
+    "Invasão e expulsão dos holandeses",
+    "Revolta de Bequimão e Companhia de Comércio",
+    "Adesão à Independência e Batalha do Jenipapo",
+    "Balaiada: causas e caracterização",
+    "República no Maranhão e o Maranhão na 2ª metade do séc. XX"
+  ]}
+};
+const SUBJECT_ORDER = ["LP","LI","INF","GB","GM","HB","HM"];
+
+/* =========================================================
+   ESTADO / PERSISTÊNCIA
+   ========================================================= */
+let DATA = {
+  progress: {},     // topicId -> {studied, dateStudied, subject, label, reviewsDone:[]}
+  hours: [],         // {id,date,subject,minutes,note}
+  questions: [],      // {id,date,subject,banca,total,acertos}
+  errors: [],         // {id,date,subject,tema,erro,correcao}
+  simulados: [],       // {id,date,nome,acertosP1,errosP1,acertosP2,errosP2}
+  notes: ""
+};
+const APP = {
+    NAME: "PMMA Planner",
+    VERSION: "3.0.0",
+    BUILD: "13/07/2026"
+};
+
+const STORAGE_KEY = "pmma-planner-v3";
+
+const CONFIG = {
+
+    examDate: "2026-10-11",
+
+    reviewDays: [1,7,15,30],
+
+    dailyStudyMinutes:180,
+
+    weeklySimulation:true,
+
+    autoReorganize:true,
+
+    calendarExport:true
+
+};
+
+
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      DATA = Object.assign(DATA, parsed);
+    }
+  }catch(e){ /* nada salvo ainda */ }
+}
+let saveTimeout=null;
+function saveData(){
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async ()=>{
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(DATA), false); }
+    catch(e){ console.error('Falha ao salvar', e); }
+  }, 250);
+}
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function addDays(dateStr,n){ const d=new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function fmtDate(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} · ${dias[d.getDay()]}`;
+}
+function monthLabel(dateStr){
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const d = new Date(dateStr+'T00:00:00');
+  return `${meses[d.getMonth()]} ${d.getFullYear()}`;
+}
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function isoWeekIndex(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const start = new Date(START_DATE+'T00:00:00');
+  return Math.floor((d-start)/(7*86400000));
+}
+
+/* =========================================================
+   GERAÇÃO DO CRONOGRAMA
+   ========================================================= */
+let SCHEDULE = null;
+const DAILY_BUDGET_MIN = 180; // ~3h/dia
+function blockId(date, kind, extra){ return `${date}__${kind}__${extra||''}`; }
+
+function generateSchedule(){
+  const pointers = {LP:0,LI:0,INF:0,GB:0,GM:0,HB:0,HM:0};
+  const schedule = [];
+  let cur = new Date(START_DATE+'T00:00:00');
+  const exam = new Date(EXAM_DATE+'T00:00:00');
+  const reta = new Date(RETA_FINAL_START+'T00:00:00');
+  let studyQueueIdx = 0;   // fila contínua para os dias normais (2 matérias/dia)
+  let retaQueueIdx = 0;    // fila contínua para a reta final
+
+  function nextSubjects(n, counterRef){
+    const picked = [];
+    for(let i=0;i<n;i++){
+      picked.push(SUBJECT_ORDER[counterRef.v % SUBJECT_ORDER.length]);
+      counterRef.v++;
+    }
+    return picked;
+  }
+  const studyCounter = {v:0}, retaCounter = {v:0};
+
+  while(cur <= exam){
+    const dateStr = cur.toISOString().slice(0,10);
+    const dow = cur.getDay();
+    let day = { date: dateStr, dow, blocks: [] };
+
+    if(dateStr === EXAM_DATE){
+      day.dayType='EXAME';
+      day.blocks.push({ kind:'EXAME', title:'PROVAS OBJETIVAS — P1 e P2', sub:'120 itens · 3h30 · turno da tarde', minutes:210, id:blockId(dateStr,'EXAME') });
+
+    } else if(cur >= reta){
+      const diffToExam = Math.round((exam - cur)/86400000);
+      if(diffToExam <= 1){
+        day.dayType='DESCANSO';
+        day.blocks.push({ kind:'DESCANSO', title:'Descanso ativo', sub:'Sem conteúdo novo — só revisar anotações-chave e organizar documentos', minutes:0, id:blockId(dateStr,'DESCANSO') });
+      } else if(dow===6){
+        day.dayType='SIMULADO';
+        day.blocks.push({ kind:'SIMULADO', title:'Simulado completo cronometrado', sub:'P1 + P2 · condições reais de prova', minutes:210, id:blockId(dateStr,'SIMULADO') });
+      } else {
+        day.dayType='REVISAO_GERAL';
+        nextSubjects(2, retaCounter).forEach(key=>{
+          day.blocks.push({ kind:'REVISAO', title:`Revisão geral — ${SUBJECTS[key].name}`, sub:'teoria rápida + bateria de questões erradas', minutes:90, subject:key, id:blockId(dateStr,'REVGERAL',key) });
+        });
+      }
+
+    } else if(dow===0){
+
+  day.dayType='ESTUDO';
+
+  const key = nextSubjects(1, studyCounter)[0];
+
+  const topics = SUBJECTS[key].topics;
+  const idx = pointers[key] % topics.length;
+  const topicId = key + '-' + idx;
+  const topicLabel = topics[idx];
+
+  pointers[key]++;
+
+  day.blocks.push({
+    kind:'TEORIA',
+    title:topicLabel,
+    sub:SUBJECTS[key].name,
+    minutes:60,
+    subject:key,
+    topicId,
+    topicLabel,
+    id:'topic__'+topicId
+  });
+
+  day.blocks.push({
+    kind:'REVISAO',
+    title:'Revisão da semana',
+    sub:'Revisar resumos, flashcards e caderno de erros',
+    minutes:60,
+    id:blockId(dateStr,'REVSEM')
+  });
+  
+    } else if(dow===6){
+
+  day.dayType='ESTUDO';
+
+  const key = nextSubjects(1, studyCounter)[0];
+
+  const topics = SUBJECTS[key].topics;
+  const idx = pointers[key] % topics.length;
+  const topicId = key + '-' + idx;
+  const topicLabel = topics[idx];
+
+  pointers[key]++;
+
+  day.blocks.push({
+    kind:'TEORIA',
+    title:topicLabel,
+    sub:SUBJECTS[key].name,
+    minutes:60,
+    subject:key,
+    topicId,
+    topicLabel,
+    id:'topic__'+topicId
+  });
+
+  day.blocks.push({
+    kind:'QUESTOES',
+    title:`Questões sobre: ${topicLabel}`,
+    sub:`${SUBJECTS[key].name} · Cebraspe`,
+    minutes:90,
+    subject:key,
+    id:blockId(dateStr,'QUEST',key)
+  });
+
+} else {
+
+      day.dayType='ESTUDO';
+      nextSubjects(2, studyCounter).forEach(key=>{
+        const topics = SUBJECTS[key].topics;
+        const idx = pointers[key] % topics.length;
+        const topicId = key+'-'+idx;
+        const topicLabel = topics[idx];
+        pointers[key]++;
+        day.blocks.push({ kind:'TEORIA', title:topicLabel, sub:SUBJECTS[key].name, minutes:60, subject:key, topicId, topicLabel, id:'topic__'+topicId });
+        day.blocks.push({ kind:'QUESTOES', title:`Questões sobre: ${topicLabel}`, sub:`${SUBJECTS[key].name} · Cebraspe`, minutes:60, subject:key, id:blockId(dateStr,'QUEST',key) });
+      });
+    }
+
+    schedule.push(day);
+    cur.setDate(cur.getDate()+1);
+  }
+  return schedule;
+}
+function scheduleMinutesOfDay(day){ return day.blocks.reduce((s,b)=>s+(b.minutes||0),0); }
+
+/* =========================================================
+   REORGANIZAÇÃO AUTOMÁTICA DE ATRASADOS
+   ========================================================= */
+function getOverdueBlocks(){
+  const today = todayStr();
+  const overdue = [];
+  SCHEDULE.forEach(day=>{
+    if(day.date >= today) return;
+    day.blocks.forEach(b=>{
+      if(b.kind==='DESCANSO' || b.kind==='EXAME') return;
+      if(!isBlockDone(b)){
+        overdue.push(Object.assign({}, b, { originalDate: day.date }));
+      }
+    });
+  });
+  return overdue;
+}
+
+function getPendingTheoryBlocks(){
+
+  const pending = [];
+
+  SCHEDULE.forEach(day => {
+
+    day.blocks.forEach(block => {
+
+      if(block.kind !== 'TEORIA') return;
+
+      if(!isBlockDone(block)){
+        pending.push({
+          ...block,
+          originalDate: day.date
+        });
+      }
+
+    });
+
+  });
+
+  return pending;
+
+}
+
+function getCurrentMission(){
+
+    const pending = getPendingTheoryBlocks();
+
+    if(pending.length === 0){
+        return null;
+    }
+
+    return pending[0];
+
+}
+
+/* =========================================================
+   AÇÕES
+   ========================================================= */
+function markStudied(topicId, subject, label, dateStr){
+  if(!DATA.progress[topicId]){
+    DATA.progress[topicId] = { studied:false, dateStudied:null, subject, label, reviewsDone:[] };
+  }
+  const p = DATA.progress[topicId];
+  p.studied = !p.studied;
+  p.dateStudied = p.studied ? (dateStr || todayStr()) : null;
+  if(!p.studied) p.reviewsDone = [];
+  saveData();
+}
+function markReviewDone(topicId, offset){
+  const p = DATA.progress[topicId];
+  if(!p) return;
+  if(!p.reviewsDone.includes(offset)) p.reviewsDone.push(offset);
+  saveData();
+  renderAll();
+}
+const REVIEW_OFFSETS = [1,7,15,30];
+function getReviewStatus(){
+  const today = todayStr();
+  let due=[], overdue=[], upcoming=[];
+  const seen = new Set(); // dedupe defensivo por topicId+offset
+  Object.entries(DATA.progress).forEach(([topicId,p])=>{
+    if(!p.studied || !p.dateStudied) return;
+    REVIEW_OFFSETS.forEach(offset=>{
+      const key = topicId+'::'+offset;
+      if(seen.has(key)) return;
+      seen.add(key);
+      if(p.reviewsDone && p.reviewsDone.includes(offset)) return;
+      const dueDate = addDays(p.dateStudied, offset);
+      const item = { topicId, offset, dueDate, subject:p.subject, label:p.label };
+      if(dueDate === today) due.push(item);
+      else if(dueDate < today) overdue.push(item);
+      else upcoming.push(item);
+    });
+  });
+  due.sort((a,b)=>a.offset-b.offset);
+  overdue.sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  upcoming.sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  return {due, overdue, upcoming};
+}
+function totalTopics(){ return SUBJECT_ORDER.reduce((s,k)=>s+SUBJECTS[k].topics.length,0); }
+function studiedCount(){ return Object.values(DATA.progress).filter(p=>p.studied).length; }
+
+/* =========================================================
+   RENDER — HUD
+   ========================================================= */
+function renderHUD(){
+  const hud = document.getElementById('hud');
+  const today = new Date();
+  const exam = new Date(EXAM_DATE+'T00:00:00');
+  const start = new Date(START_DATE+'T00:00:00');
+  const totalDays = Math.round((exam-start)/86400000);
+  const daysLeft = Math.max(0, Math.ceil((exam - today)/86400000));
+  const daysDone = Math.min(totalDays, totalDays - daysLeft);
+  const pct = totalTopics()? Math.round((studiedCount()/totalTopics())*100) : 0;
+
+  let phase='Fase 1 — Base', phaseIdx=0;
+  const reta = new Date(RETA_FINAL_START+'T00:00:00');
+  const p2start = new Date('2026-09-01T00:00:00');
+  if(today >= reta){ phase='Fase 3 — Reta final'; phaseIdx=2; }
+  else if(today >= p2start){ phase='Fase 2 — Aprofundamento'; phaseIdx=1; }
+
+  const segCount = 20;
+  const filledSegs = Math.round((daysDone/totalDays)*segCount);
+  let segs='';
+  for(let i=0;i<segCount;i++){
+    let cls='seg';
+    if(i<filledSegs) cls+=' filled';
+    if(i===filledSegs) cls+=' current';
+    segs += `<div class="${cls}"></div>`;
+  }
+
+  hud.innerHTML = `
+    <div class="hud-clock">
+      <div class="num mono">${daysLeft.toString().padStart(3,'0')}</div>
+      <div class="lbl">dias até a<br>prova (11/10)</div>
+    </div>
+    <div class="hud-seg">
+      <div class="row"><span>${phase}</span><span>${daysDone}/${totalDays} dias</span></div>
+      <div class="segbar">${segs}</div>
+    </div>
+    <div class="hud-stat">
+      <div class="num mono">${pct}%</div>
+      <div class="lbl">edital coberto</div>
+    </div>
+    <div class="hud-stat">
+      <div class="num mono">${studiedCount()}/${totalTopics()}</div>
+      <div class="lbl">tópicos estudados</div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER — DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  const el = document.getElementById('tab-dashboard');
+  const {due, overdue} = getReviewStatus();
+  const currentMission = getCurrentMission();
+  const totalHours = DATA.hours.reduce((s,h)=>s+Number(h.minutes||0),0)/60;
+  const totalQ = DATA.questions.reduce((s,q)=>s+Number(q.total||0),0);
+  const totalAcertos = DATA.questions.reduce((s,q)=>s+Number(q.acertos||0),0);
+  const aproveitamento = totalQ? Math.round((totalAcertos/totalQ)*100) : 0;
+
+  const overdueBlocks = getOverdueBlocks();
+  const todaySched = scheduleForDate(todayStr());
+  const todayBlocks = todaySched ? todaySched.blocks : [];
+
+  el.innerHTML = `
+    <div class="grid2">
+      <div class="panel">
+        <h2><span class="dot"></span>Hoje${overdueBlocks.length?` <span class="badge b-atrasado" style="margin-left:6px;">${overdueBlocks.length} atrasada(s) reorganizada(s)</span>`:''}</h2>
+        ${overdueBlocks.slice(0,4).map(b=>`
+          <div class="daterow" style="align-items:flex-start;">
+            <span class="badge b-atrasado" style="flex-shrink:0;">Atrasado</span>
+            <div class="lbl">${b.title} <span style="color:var(--text-faint);font-size:10.5px;">(era de ${fmtDate(b.originalDate)})</span></div>
+          </div>`).join('')}
+        ${todayBlocks.length===0 ? '<div class="empty">Sem tarefas para hoje (fora do período do plano).</div>' : todayBlocks.map(b=>`
+          <div class="daterow" style="align-items:flex-start;">
+            ${badgeFor(b.kind)}
+            <div class="lbl">${b.title} <span class="mono" style="color:var(--text-faint);font-size:10.5px;">${b.minutes?('· '+b.minutes+'min'):''}</span></div>
+          </div>`).join('')}
+        <div style="margin-top:12px;"><button class="btn-ghost" onclick="switchTab('cronograma')">Ver quadro semanal →</button></div>
+      </div>
+      <div class="panel">
+        <h2><span class="dot"></span>Revisões pendentes hoje</h2>
+        ${overdue.length ? `<div class="badge b-simulado" style="margin-bottom:10px;">${overdue.length} atrasada(s)</div>`:''}
+        ${due.length===0 && overdue.length===0 ? '<div class="empty">Nenhuma revisão pendente. Continue registrando seus estudos no Cronograma.</div>' : ''}
+        ${[...overdue.slice(0,3),...due.slice(0,4)].map(item=>`
+          <div class="card ${item.dueDate<todayStr()?'overdue':''}">
+            <div class="meta">${SUBJECTS[item.subject]?.name || item.subject} · Revisão D+${item.offset} · venceu ${fmtDate(item.dueDate)}</div>
+            <p><strong>${item.label}</strong></p>
+            <button class="btn-ghost" onclick="markReviewDone('${item.topicId}',${item.offset})">Marcar revisão como feita</button>
+          </div>
+        `).join('')}
+        <div style="margin-top:12px;"><button class="btn-ghost" onclick="switchTab('revisoes')">Ver todas as revisões →</button></div>
+      </div>
+    </div>
+
+      <div class="panel">
+    <h2><span class="dot"></span>🎯 Próxima missão</h2>
+
+    ${
+        currentMission
+        ? `
+            <div class="card">
+                <div class="meta">${SUBJECTS[currentMission.subject].name}</div>
+                <p><strong>${currentMission.topicLabel}</strong></p>
+            </div>
+        `
+        : `
+            <div class="empty">
+                Parabéns! Todas as matérias foram concluídas.
+            </div>
+        `
+    }
+
+    </div>
+
+    <div class="grid3">
+      <div class="panel">
+        <h2><span class="dot"></span>Horas</h2>
+        <div class="hud-stat" style="text-align:left;"><div class="num mono">${totalHours.toFixed(1)}h</div><div class="lbl">total registrado</div></div>
+      </div>
+      <div class="panel">
+        <h2><span class="dot"></span>Questões</h2>
+        <div class="hud-stat" style="text-align:left;"><div class="num mono">${totalQ}</div><div class="lbl">${aproveitamento}% de aproveitamento</div></div>
+      </div>
+      <div class="panel">
+        <h2><span class="dot"></span>Simulados</h2>
+        <div class="hud-stat" style="text-align:left;"><div class="num mono">${DATA.simulados.length}</div><div class="lbl">registrados</div></div>
+      </div>
+    </div>
+  `;
+}
+function badgeFor(kind){
+  const map = {
+    TEORIA:['b-estudo','Teoria'], QUESTOES:['b-questoes','Questões'], LEGISLACAO:['b-legislacao','Legislação seca'],
+    REVISAO:['b-revisao','Revisão'], SIMULADO:['b-simulado','Simulado'], DESCANSO:['b-descanso','Descanso'], EXAME:['b-exame','PROVA']
+  };
+  const m = map[kind] || ['b-descanso',kind];
+  return `<span class="badge ${m[0]}">${m[1]}</span>`;
+}
+function subjectBar(key){
+  const subj = SUBJECTS[key];
+  const total = subj.topics.length;
+  const done = subj.topics.filter((t,i)=>DATA.progress[key+'-'+i]?.studied).length;
+  const pct = Math.round((done/total)*100);
+  return `
+    <div class="subj-block">
+      <div class="subj-title"><span class="name">${subj.name}</span><span class="pct mono">${done}/${total}</span></div>
+      <div class="bar"><div style="width:${pct}%;background:${subj.color};"></div></div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER — CRONOGRAMA (quadro semanal, estilo DSO Tutory)
+   ========================================================= */
+let WEEK_ANCHOR = null; // segunda-feira da semana 0
+let currentWeekOffset = 0;
+function initWeekAnchor(){
+  const start = new Date(START_DATE+'T00:00:00');
+  const dow = start.getDay(); // 0=Dom..6=Sab
+  const diffToMonday = (dow===0) ? -6 : (1-dow);
+  const monday = new Date(start);
+  monday.setDate(monday.getDate()+diffToMonday);
+  WEEK_ANCHOR = monday;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const exam = new Date(EXAM_DATE+'T00:00:00');
+  const ref = (today >= new Date(START_DATE+'T00:00:00') && today <= exam) ? today : new Date(START_DATE+'T00:00:00');
+  currentWeekOffset = Math.max(0, Math.floor((ref - WEEK_ANCHOR)/(7*86400000)));
+}
+function shiftWeek(delta){
+  currentWeekOffset = Math.max(0, currentWeekOffset+delta);
+  renderCronograma();
+}
+function goToTodayWeek(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  currentWeekOffset = Math.max(0, Math.floor((today - WEEK_ANCHOR)/(7*86400000)));
+  renderCronograma();
+}
+function scheduleForDate(dateStr){ return SCHEDULE.find(d=>d.date===dateStr); }
+
+function toggleBlockDone(block){
+  if(block.topicId){
+    markStudied(block.topicId, block.subject, block.topicLabel, block.date || todayStr());
+  } else {
+    DATA.completedBlocks = DATA.completedBlocks || {};
+    DATA.completedBlocks[block.id] = !DATA.completedBlocks[block.id];
+    saveData();
+  }
+  renderAll();
+}
+function isBlockDone(block){
+  if(block.topicId) return !!DATA.progress[block.topicId]?.studied;
+  return !!(DATA.completedBlocks && DATA.completedBlocks[block.id]);
+}
+
+function getTodayBlocks(sched){
+
+    let blocks = sched.blocks.map(b => ({
+        block: b,
+        atrasado: false
+    }));
+
+const overdue = getOverdueBlocks();
+
+if(overdue.length){
+  
+        blocks = [
+            ...overdue.map(b => ({
+                block: b,
+                atrasado: true
+            })),
+            ...blocks
+        ];
+
+    }
+
+    return blocks;
+
+}
+
+function getBlocksForDay(sched, isToday){
+
+    let blocks = sched.blocks.map(b => ({
+        block: b,
+        atrasado: false
+    }));
+
+    if(isToday){
+        return getTodayBlocks(sched);
+    }
+
+    return blocks;
+
+}
+
+function renderCronograma(){
+  const el = document.getElementById('tab-cronograma');
+  const weekStart = new Date(WEEK_ANCHOR);
+  weekStart.setDate(weekStart.getDate() + currentWeekOffset*7);
+  const days = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(weekStart);
+    d.setDate(d.getDate()+i);
+    const dateStr = d.toISOString().slice(0,10);
+    days.push({ date: dateStr, dow: d.getDay(), sched: scheduleForDate(dateStr) });
+  }
+  const dowNames = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+  const weekStartStr = weekStart.toISOString().slice(0,10);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
+  const rangeLabel = `${fmtDate(weekStartStr).split(' · ')[0]} — ${fmtDate(weekEnd.toISOString().slice(0,10)).split(' · ')[0]} de ${monthLabel(weekEnd.toISOString().slice(0,10))}`;
+
+  let totalWeekMin = 0;
+  const today = todayStr();
+
+  const cols = days.map(day=>{
+    const sched = day.sched;
+    const isToday = day.date === today;
+    const isPast = day.date < today;
+    const isWeekend = (day.dow===0 || day.dow===6);
+    if(!sched){
+      return `<div class="kcol ${isWeekend?'weekend':''}"><div class="khead"><div class="dow">${dowNames[day.dow]}</div><div class="ddate mono">${day.date.slice(8,10)}/${day.date.slice(5,7)}</div></div><div class="kbody"><div class="empty" style="font-size:10.5px;">fora do período</div></div></div>`;
+    }
+    let blocksForCol = getBlocksForDay(sched, isToday);
+    const dayMin = scheduleMinutesOfDay(sched);
+    totalWeekMin += dayMin;
+    const blocksHtml = blocksForCol.map(({block:b, atrasado})=>{
+      const done = isBlockDone(b);
+      const isMovedToToday = !isToday && !done && b.originalDate && b.originalDate !== sched.date;
+      const showAtrasadoPast = isPast && !done && b.kind!=='DESCANSO' && b.kind!=='EXAME';
+      const bJson = JSON.stringify(Object.assign({},b,{date:sched.date})).replace(/"/g,'&quot;');
+      return `
+        <div class="kblock ${done?'done':''}" onclick="toggleBlockDone(JSON.parse(this.dataset.block))" data-block="${bJson}">
+          <div class="khkind">${atrasado?'<span class="badge b-atrasado">Atrasado</span>':badgeFor(b.kind)}<span class="ktime">${b.minutes?b.minutes+'min':''}</span></div>
+          <div class="ktitle"><span class="kcheck"></span>&nbsp;${b.title}</div>
+          ${b.sub?`<div class="ksub">${b.sub}</div>`:''}
+          ${showAtrasadoPast?'<div class="ksub" style="color:#C1442E;font-weight:600;">→ reorganizado para hoje</div>':''}
+        </div>`;
+    }).join('');
+    return `
+      <div class="kcol ${isToday?'today':''} ${isWeekend?'weekend':''}">
+        <div class="khead">
+          <div class="dow">${dowNames[day.dow]}</div>
+          <div class="ddate mono">${day.date.slice(8,10)}/${day.date.slice(5,7)}</div>
+          <div class="dtime">≈ ${dayMin>=60?(dayMin/60).toFixed(1)+'h':dayMin+'min'}</div>
+        </div>
+        <div class="kbody">${blocksHtml}</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="panel">
+      <div class="week-nav">
+        <div>
+          <div class="range">${rangeLabel}</div>
+          <div class="sub">≈ ${(totalWeekMin/60).toFixed(1)}h de estudo previstas nesta semana</div>
+        </div>
+        <div class="btns">
+          <button class="btn-ghost" onclick="shiftWeek(-1)">← Semana anterior</button>
+          <button class="btn-ghost" onclick="goToTodayWeek()">Hoje</button>
+          <button class="btn-ghost" onclick="shiftWeek(1)">Próxima semana →</button>
+        </div>
+      </div>
+      <div class="kanban">${cols}</div>
+      <p style="color:var(--text-faint);font-size:11px;margin-top:14px;">Clique em um bloco para marcar como concluído. Tarefas atrasadas são reorganizadas automaticamente para a coluna de hoje. Blocos de <strong style="color:var(--accent)">Teoria</strong> alimentam o Checklist do edital e o sistema de Revisões (D+1/D+7/D+15/D+30).</p>
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER — CHECKLIST DO EDITAL
+   ========================================================= */
+let checklistOpen = {}; // subject key -> bool
+function toggleChecklistSubject(key){
+  checklistOpen[key] = !checklistOpen[key];
+  renderChecklist();
+}
+function renderChecklist(){
+  const el = document.getElementById('tab-checklist');
+  el.innerHTML = `
+    <div class="panel">
+      <h2><span class="dot"></span>Checklist completo do edital — Cargo 1 (Soldado QP)</h2>
+      <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:16px;">P1 — Conhecimentos Gerais: Língua Portuguesa, História do Brasil, História do MA, Geografia do Brasil, Geografia do MA (50 itens · mínimo 10 pts).<br>P2 — Conhecimentos Específicos: Legislação Institucional e Informática (70 itens · mínimo 21 pts). Nota final mínima: 36 pts.</p>
+      ${SUBJECT_ORDER.map(key=>{
+        const subj = SUBJECTS[key];
+        const done = subj.topics.filter((t,i)=>DATA.progress[key+'-'+i]?.studied).length;
+        const pct = Math.round((done/subj.topics.length)*100);
+        const isOpen = !!checklistOpen[key];
+        return `
+        <div class="subj-block">
+          <div class="subj-head ${isOpen?'open':''}" onclick="toggleChecklistSubject('${key}')">
+            <div class="subj-title" style="flex:1;margin-bottom:0;"><span class="name">${subj.name}</span><span class="pct mono">${done}/${subj.topics.length} · ${pct}%</span></div>
+            <span class="chev">▶</span>
+          </div>
+          <div class="bar"><div style="width:${pct}%;background:${subj.color};"></div></div>
+          <div class="subj-topics ${isOpen?'open':''}">
+            ${subj.topics.map((t,i)=>{
+              const tid = key+'-'+i;
+              const study = DATA.progress[tid];
+              const st = study?.studied;
+
+              let reviewText = '';
+              if(study?.studied && study?.dateStudied){
+
+                reviewText = REVIEW_OFFSETS
+                  .map(offset => fmtDate(addDays(study.dateStudied, offset)).split(" · ")[0])
+                   .join(" | ");
+
+              }
+              return `<div class="topic-row ${st?'studied':''}">
+                <span class="idx">${String(i+1).padStart(2,'0')}</span>
+                <div class="chip ${st?'done':''}" onclick="event.stopPropagation();toggleStudied('${tid}','${key}',\`${t.replace(/`/g,"'")}\`, todayStr())"></div>
+                <div style="display:flex;flex-direction:column;flex:1;">
+
+                  <span>${t}</span>
+
+                 ${
+                     reviewText
+                     ? `<small style="font-size:11px;color:var(--text-faint);margin-top:3px;">
+                      📅 ${reviewText}
+                    </small>`
+                  : ""
+                }
+
+              </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER — REVISÕES
+   ========================================================= */
+function renderRevisoes(){
+  const el = document.getElementById('tab-revisoes');
+  const {due, overdue, upcoming} = getReviewStatus();
+  function block(title, items, cls){
+    return `<div class="panel"><h2><span class="dot" style="background:${cls==='overdue'?'var(--danger)':'var(--accent)'};"></span>${title} (${items.length})</h2>
+      ${items.length===0 ? '<div class="empty">Nada por aqui.</div>' : items.map(item=>`
+        <div class="card ${cls==='overdue'?'overdue':''}">
+          <div class="meta">${SUBJECTS[item.subject]?.name || item.subject} · Revisão D+${item.offset} · ${fmtDate(item.dueDate)}</div>
+          <p><strong>${item.label}</strong></p>
+          <button class="btn-ghost" onclick="markReviewDone('${item.topicId}',${item.offset})">Marcar como revisado</button>
+        </div>`).join('')}
+    </div>`;
+  }
+  el.innerHTML = `
+    <div class="panel" style="margin-bottom:18px;">
+      <h2><span class="dot"></span>Sistema de revisão espaçada</h2>
+      <p style="color:var(--text-dim);font-size:12.5px;">Ao marcar um tópico como estudado (no Cronograma ou no Checklist), o painel agenda automaticamente revisões em <strong style="color:var(--text)">D+1, D+7, D+21 e D+45</strong>. Elas aparecem aqui e no Painel Geral conforme forem vencendo.</p>
+    </div>
+    ${block('Atrasadas', overdue, 'overdue')}
+    ${block('Vencendo hoje', due, 'due')}
+    ${block('Próximas', upcoming.slice(0,25), 'upcoming')}
+  `;
+}
+
+/* =========================================================
+   RENDER — HORAS
+   ========================================================= */
+function renderHoras(){
+  const el = document.getElementById('tab-horas');
+  const bySubject = {};
+  SUBJECT_ORDER.forEach(k=>bySubject[k]=0);
+  bySubject['REV']=0;
+  DATA.hours.forEach(h=>{ bySubject[h.subject] = (bySubject[h.subject]||0) + Number(h.minutes||0); });
+  const maxMin = Math.max(1,...Object.values(bySubject));
+  const total = DATA.hours.reduce((s,h)=>s+Number(h.minutes||0),0);
+
+  el.innerHTML = `
+    <div class="panel">
+      <h2><span class="dot"></span>Registrar horas de estudo</h2>
+      <div class="formrow">
+        <div class="field"><label>Data</label><input type="date" id="h-date" value="${todayStr()}"></div>
+        <div class="field"><label>Matéria</label>
+          <select id="h-subject">
+            ${SUBJECT_ORDER.map(k=>`<option value="${k}">${SUBJECTS[k].name}</option>`).join('')}
+            <option value="REV">Revisão geral / Simulado</option>
+          </select>
+        </div>
+        <div class="field"><label>Minutos</label><input type="number" id="h-minutes" min="5" step="5" style="width:90px;" value="60"></div>
+        <div class="field"><label>Observação</label><input type="text" id="h-note" placeholder="opcional" style="width:220px;"></div>
+        <button class="btn" onclick="addHours()">Registrar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Total por matéria — ${(total/60).toFixed(1)}h no total</h2>
+      ${Object.entries(bySubject).filter(([k,v])=>v>0 || SUBJECT_ORDER.includes(k)).map(([k,v])=>`
+        <div class="subj-block">
+          <div class="subj-title"><span class="name">${SUBJECTS[k]?.name || 'Revisão geral / Simulado'}</span><span class="pct mono">${(v/60).toFixed(1)}h</span></div>
+          <div class="bar"><div style="width:${(v/maxMin)*100}%;background:${SUBJECTS[k]?.color || '#C9A227'};"></div></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Histórico</h2>
+      <table>
+        <tr><th>Data</th><th>Matéria</th><th>Duração</th><th>Obs.</th><th></th></tr>
+        ${DATA.hours.slice().reverse().map(h=>`
+          <tr><td class="mono">${fmtDate(h.date)}</td><td>${SUBJECTS[h.subject]?.name || 'Revisão/Simulado'}</td><td class="mono">${h.minutes}min</td><td>${h.note||'—'}</td>
+          <td><button class="btn-danger" onclick="removeItem('hours','${h.id}')">remover</button></td></tr>
+        `).join('') || '<tr><td colspan="5" class="empty">Nenhum registro ainda.</td></tr>'}
+      </table>
+    </div>
+  `;
+}
+function addHours(){
+  const date = document.getElementById('h-date').value || todayStr();
+  const subject = document.getElementById('h-subject').value;
+  const minutes = document.getElementById('h-minutes').value;
+  const note = document.getElementById('h-note').value;
+  if(!minutes || minutes<=0) return;
+  DATA.hours.push({id:uid(), date, subject, minutes:Number(minutes), note});
+  saveData(); renderAll();
+}
+
+/* =========================================================
+   RENDER — QUESTÕES
+   ========================================================= */
+function renderQuestoes(){
+  const el = document.getElementById('tab-questoes');
+  const bySubject = {};
+  SUBJECT_ORDER.forEach(k=>bySubject[k]={total:0,acertos:0});
+  DATA.questions.forEach(q=>{
+    if(!bySubject[q.subject]) bySubject[q.subject]={total:0,acertos:0};
+    bySubject[q.subject].total += Number(q.total||0);
+    bySubject[q.subject].acertos += Number(q.acertos||0);
+  });
+
+  el.innerHTML = `
+    <div class="panel">
+      <h2><span class="dot"></span>Registrar sessão de questões</h2>
+      <div class="formrow">
+        <div class="field"><label>Data</label><input type="date" id="q-date" value="${todayStr()}"></div>
+        <div class="field"><label>Matéria</label>
+          <select id="q-subject">${SUBJECT_ORDER.map(k=>`<option value="${k}">${SUBJECTS[k].name}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Banca</label><input type="text" id="q-banca" value="Cebraspe" style="width:110px;"></div>
+        <div class="field"><label>Total de itens</label><input type="number" id="q-total" min="1" style="width:90px;" value="20"></div>
+        <div class="field"><label>Acertos</label><input type="number" id="q-acertos" min="0" style="width:90px;" value="15"></div>
+        <button class="btn" onclick="addQuestion()">Registrar</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Aproveitamento por matéria</h2>
+      ${Object.entries(bySubject).map(([k,v])=>{
+        const pct = v.total ? Math.round((v.acertos/v.total)*100) : 0;
+        return `<div class="subj-block">
+          <div class="subj-title"><span class="name">${SUBJECTS[k].name}</span><span class="pct mono">${v.acertos}/${v.total} · ${pct}%</span></div>
+          <div class="bar"><div style="width:${pct}%;background:${pct<60?'var(--danger)':SUBJECTS[k].color};"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Histórico</h2>
+      <table>
+        <tr><th>Data</th><th>Matéria</th><th>Banca</th><th>Acertos</th><th>%</th><th></th></tr>
+        ${DATA.questions.slice().reverse().map(q=>`
+          <tr><td class="mono">${fmtDate(q.date)}</td><td>${SUBJECTS[q.subject]?.name}</td><td>${q.banca}</td>
+          <td class="mono">${q.acertos}/${q.total}</td><td class="mono">${Math.round((q.acertos/q.total)*100)}%</td>
+          <td><button class="btn-danger" onclick="removeItem('questions','${q.id}')">remover</button></td></tr>
+        `).join('') || '<tr><td colspan="6" class="empty">Nenhum registro ainda.</td></tr>'}
+      </table>
+    </div>
+  `;
+}
+function addQuestion(){
+  const date = document.getElementById('q-date').value || todayStr();
+  const subject = document.getElementById('q-subject').value;
+  const banca = document.getElementById('q-banca').value || 'Cebraspe';
+  const total = Number(document.getElementById('q-total').value);
+  const acertos = Number(document.getElementById('q-acertos').value);
+  if(!total || acertos>total) return;
+  DATA.questions.push({id:uid(), date, subject, banca, total, acertos});
+  saveData(); renderAll();
+}
+
+/* =========================================================
+   RENDER — CADERNO DE ERROS
+   ========================================================= */
+function renderErros(){
+  const el = document.getElementById('tab-erros');
+  el.innerHTML = `
+    <div class="panel">
+      <h2><span class="dot"></span>Novo registro no caderno de erros</h2>
+      <div class="formrow">
+        <div class="field"><label>Data</label><input type="date" id="e-date" value="${todayStr()}"></div>
+        <div class="field"><label>Matéria</label>
+          <select id="e-subject">${SUBJECT_ORDER.map(k=>`<option value="${k}">${SUBJECTS[k].name}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="formrow" style="flex-direction:column;align-items:stretch;">
+        <div class="field"><label>Assunto / questão</label><textarea id="e-tema" rows="2" style="width:100%;" placeholder="ex.: item sobre crase antes de pronome de tratamento"></textarea></div>
+        <div class="field"><label>O que errei e por quê</label><textarea id="e-erro" rows="2" style="width:100%;" placeholder="ex.: confundi 'Senhora' com pronome que admite crase"></textarea></div>
+        <div class="field"><label>Correção / o que aprendi</label><textarea id="e-correcao" rows="2" style="width:100%;"></textarea></div>
+        <button class="btn" style="align-self:flex-start;" onclick="addErro()">Salvar no caderno</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Erros registrados (${DATA.errors.length})</h2>
+      ${DATA.errors.slice().reverse().map(e=>`
+        <div class="card overdue">
+          <div class="meta">${fmtDate(e.date)} · ${SUBJECTS[e.subject]?.name}</div>
+          <p><strong>${e.tema}</strong></p>
+          <p>Erro: ${e.erro}</p>
+          <p>Correção: ${e.correcao}</p>
+          <button class="btn-danger" onclick="removeItem('errors','${e.id}')">remover</button>
+        </div>
+      `).join('') || '<div class="empty">Nenhum erro registrado ainda — bom sinal, mas registre assim que errar uma questão para revisar depois.</div>'}
+    </div>
+  `;
+}
+function addErro(){
+  const date = document.getElementById('e-date').value || todayStr();
+  const subject = document.getElementById('e-subject').value;
+  const tema = document.getElementById('e-tema').value.trim();
+  const erro = document.getElementById('e-erro').value.trim();
+  const correcao = document.getElementById('e-correcao').value.trim();
+  if(!tema) return;
+  DATA.errors.push({id:uid(), date, subject, tema, erro, correcao});
+  saveData(); renderAll();
+}
+
+/* =========================================================
+   RENDER — SIMULADOS
+   ========================================================= */
+function renderSimulados(){
+  const el = document.getElementById('tab-simulados');
+  el.innerHTML = `
+    <div class="panel">
+      <h2><span class="dot"></span>Registrar simulado</h2>
+      <div class="formrow">
+        <div class="field"><label>Data</label><input type="date" id="s-date" value="${todayStr()}"></div>
+        <div class="field"><label>Nome</label><input type="text" id="s-nome" placeholder="ex.: Simulado mensal 1" style="width:180px;"></div>
+      </div>
+      <div class="formrow">
+        <div class="field"><label>P1 acertos (de 50)</label><input type="number" id="s-acp1" min="0" max="50" style="width:90px;" value="0"></div>
+        <div class="field"><label>P1 erros</label><input type="number" id="s-erp1" min="0" max="50" style="width:90px;" value="0"></div>
+        <div class="field"><label>P2 acertos (de 70)</label><input type="number" id="s-acp2" min="0" max="70" style="width:90px;" value="0"></div>
+        <div class="field"><label>P2 erros</label><input type="number" id="s-erp2" min="0" max="70" style="width:90px;" value="0"></div>
+        <button class="btn" onclick="addSimulado()">Registrar</button>
+      </div>
+      <p style="color:var(--text-faint);font-size:11.5px;">Pontuação Cebraspe: acerto = +1, erro = −1, em branco = 0. Corte mínimo: P1 ≥ 10 pts · P2 ≥ 21 pts · Nota final ≥ 36 pts.</p>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Histórico de simulados</h2>
+      <table>
+        <tr><th>Data</th><th>Nome</th><th>Nota P1</th><th>Nota P2</th><th>Nota final</th><th>Situação</th><th></th></tr>
+        ${DATA.simulados.slice().reverse().map(s=>{
+          const notaP1 = s.acertosP1 - s.errosP1;
+          const notaP2 = s.acertosP2 - s.errosP2;
+          const final = notaP1 + notaP2;
+          const passou = notaP1>=10 && notaP2>=21 && final>=36;
+          return `<tr>
+            <td class="mono">${fmtDate(s.date)}</td><td>${s.nome||'—'}</td>
+            <td class="mono">${notaP1}</td><td class="mono">${notaP2}</td><td class="mono">${final}</td>
+            <td><span class="badge ${passou?'b-estudo':'b-simulado'}">${passou?'Aprovaria':'Abaixo do corte'}</span></td>
+            <td><button class="btn-danger" onclick="removeItem('simulados','${s.id}')">remover</button></td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="7" class="empty">Nenhum simulado registrado ainda.</td></tr>'}
+      </table>
+    </div>
+  `;
+}
+function addSimulado(){
+  const date = document.getElementById('s-date').value || todayStr();
+  const nome = document.getElementById('s-nome').value;
+  const acertosP1 = Number(document.getElementById('s-acp1').value);
+  const errosP1 = Number(document.getElementById('s-erp1').value);
+  const acertosP2 = Number(document.getElementById('s-acp2').value);
+  const errosP2 = Number(document.getElementById('s-erp2').value);
+  DATA.simulados.push({id:uid(), date, nome, acertosP1, errosP1, acertosP2, errosP2});
+  saveData(); renderAll();
+}
+
+/* =========================================================
+   RENDER — ESTRATÉGIA CEBRASPE
+   ========================================================= */
+function renderEstrategia(){
+  const el = document.getElementById('tab-estrategia');
+  el.innerHTML = `
+    <div class="panel strategy">
+      <h2><span class="dot"></span>Estratégia específica para a banca Cebraspe</h2>
+
+      <h3>Como funciona a pontuação Certo/Errado</h3>
+      <ul>
+        <li>Cada item vale <strong>+1,00</strong> se acertado e <strong>−1,00</strong> se errado. Marcação em branco ou dupla vale <strong>0,00</strong>.</li>
+        <li>Isso significa que <strong>chutar sem base custa caro</strong>: dois chutes errados anulam dois acertos certos. Deixe em branco quando não tiver nenhuma pista — é estatisticamente melhor que o chute puro.</li>
+        <li>Notas de corte deste edital: P1 ≥ 10 pts, P2 ≥ 21 pts, nota final ≥ 36 pts. Treine sempre calculando sua nota líquida (acertos − erros), não só o percentual de acerto.</li>
+      </ul>
+
+      <h3>Leitura do comando do item</h3>
+      <ul>
+        <li>O Cebraspe costuma inserir <strong>uma única incorreção</strong> por item — geralmente uma palavra que muda o sentido (um detalhe, uma data, uma condição). Leia palavra por palavra, não por "sensação geral" do texto.</li>
+        <li>Desconfie de <strong>palavras absolutas</strong> ("sempre", "nunca", "toda", "exclusivamente", "apenas") — nem sempre estão erradas, mas merecem checagem redobrada contra o texto-base ou a lei.</li>
+        <li>Em itens de português, cuidado com afirmações que soam plausíveis mas <strong>extrapolam</strong> o que o texto realmente diz — o erro típico é o exagero de generalização.</li>
+      </ul>
+
+      <h3>Gestão do tempo na prova</h3>
+      <ul>
+        <li>3h30 para 120 itens ≈ <strong>1min45s por item</strong>, em média. Reserve os últimos 15-20 minutos só para revisão da folha de respostas.</li>
+        <li>Na primeira passada, resolva os itens que você tem certeza. Marque com um sinal discreto no rascunho os que geraram dúvida e volte a eles depois.</li>
+        <li>Treine sempre cronometrado nos simulados — a pressão de tempo muda o comportamento na hora da prova real.</li>
+      </ul>
+
+      <h3>Uso de recursos e gabaritos</h3>
+      <ul>
+        <li>Sempre que o gabarito preliminar sair, confira item a item e já monte o rascunho de eventual recurso com base em bibliografia — não deixe para a última hora do prazo recursal.</li>
+        <li>Recursos bem fundamentados citam a referência bibliográfica ou o dispositivo legal específico, não apenas "discordo do gabarito".</li>
+      </ul>
+
+      <h3>Revisão do dia anterior e da prova</h3>
+      <ul>
+        <li>No dia anterior, evite conteúdo novo — foque em revisar resumos e o caderno de erros.</li>
+        <li>Leve caneta esferográfica de tinta preta em material transparente, documento de identidade original e comprovante de inscrição.</li>
+        <li>Chegue com pelo menos 1 hora de antecedência ao local de prova.</li>
+      </ul>
+    </div>
+  `;
+}
+
+/* =========================================================
+   RENDER — NOTAS
+   ========================================================= */
+function renderNotas(){
+  const el = document.getElementById('tab-notas');
+  el.innerHTML = `
+    <div class="panel">
+      <h2><span class="dot"></span>Anotações gerais</h2>
+      <textarea class="notes" id="notesArea" placeholder="Use este espaço livre para resumos, dúvidas para tirar depois, lembretes sobre documentação da inscrição, etc.">${DATA.notes||''}</textarea>
+    </div>
+  `;
+  const ta = document.getElementById('notesArea');
+  ta.addEventListener('input', ()=>{ DATA.notes = ta.value; saveData(); });
+}
+
+/* =========================================================
+   AÇÕES GERAIS
+   ========================================================= */
+function removeItem(collection, id){
+  DATA[collection] = DATA[collection].filter(i=>i.id!==id);
+  saveData(); renderAll();
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+const TABS = [
+  {id:'dashboard', label:'Painel geral'},
+  {id:'cronograma', label:'Cronograma'},
+  {id:'checklist', label:'Checklist do edital'},
+  {id:'revisoes', label:'Revisões'},
+  {id:'horas', label:'Controle de horas'},
+  {id:'questoes', label:'Controle de questões'},
+  {id:'erros', label:'Caderno de erros'},
+  {id:'simulados', label:'Simulados'},
+  {id:'estrategia', label:'Estratégia Cebraspe'},
+  {id:'notas', label:'Anotações'}
+];
+let activeTab = 'dashboard';
+function renderNav(){
+  const nav = document.getElementById('navTabs');
+  nav.innerHTML = TABS.map(t=>`<button class="${t.id===activeTab?'active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('');
+}
+function switchTab(id){
+  activeTab = id;
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  renderNav();
+}
+
+/* =========================================================
+   RENDER ALL
+   ========================================================= */
+function renderAll(){
+  renderHUD();
+  renderDashboard();
+  renderCronograma();
+  renderChecklist();
+  renderRevisoes();
+  renderHoras();
+  renderQuestoes();
+  renderErros();
+  renderSimulados();
+  renderEstrategia();
+  renderNotas();
+  renderNav();
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+(async function init(){
+  await loadData();
+  if(!DATA.completedBlocks) DATA.completedBlocks = {};
+  SCHEDULE = generateSchedule();
+  initWeekAnchor();
+  renderAll();
+})();
+</script>
+</body>
+</html>
