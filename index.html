@@ -6,6 +6,7 @@
 <title>Painel de Operações — Concurso PMMA 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --bg:#F2F1FA;
@@ -125,6 +126,30 @@
     .week-nav .btns button{flex:1;}
   }
 
+  /* ===== Autenticação ===== */
+  #authScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+  #authScreen.hidden{display:none;}
+  .auth-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:380px;padding:32px 28px;}
+  .auth-card .tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:.15em;font-weight:700;}
+  .auth-card h1{font-size:20px;margin-top:6px;}
+  .auth-card .sub{font-size:12px;color:var(--text-faint);margin-top:6px;margin-bottom:22px;}
+  .auth-field{margin-bottom:12px;}
+  .auth-field label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+  .auth-field input{width:100%;padding:10px 12px;}
+  .auth-msg{font-size:12px;margin:10px 0 4px;min-height:16px;line-height:1.5;}
+  .auth-btn{width:100%;background:var(--purple);color:#fff;border:none;padding:11px;border-radius:8px;font-size:13.5px;font-weight:600;margin-top:6px;}
+  .auth-btn:hover{background:var(--purple-dark);}
+  .auth-btn[disabled]{opacity:.6;cursor:default;}
+  .auth-switch{text-align:center;margin-top:16px;font-size:12.5px;color:var(--text-dim);}
+  .auth-switch a{cursor:pointer;font-weight:600;}
+  .auth-config-warning{background:var(--amber-soft);color:var(--amber-ink);border-radius:8px;padding:10px 12px;font-size:11.5px;margin-bottom:16px;line-height:1.5;}
+  #userBadge{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:var(--panel-2);border-radius:8px;margin:0 6px 8px;}
+  #userBadge .em{font-size:11px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #userBadge button{background:none;border:none;color:var(--purple);font-size:11px;font-weight:600;flex-shrink:0;}
+  #saveIndicator{position:fixed;bottom:16px;right:16px;background:var(--ink);color:#fff;font-size:11.5px;padding:8px 14px;border-radius:20px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:900;}
+  #saveIndicator.show{opacity:1;transform:translateY(0);}
+  #saveIndicator.error{background:var(--danger);}
+
   /* ===== Kanban semanal (estilo DSO Tutory) ===== */
   .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
   .week-nav .range{font-size:16px;font-weight:700;color:var(--ink);}
@@ -225,15 +250,42 @@
 </style>
 </head>
 <body>
-<div id="shell">
+
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="tag">SEAD/MA · CEBRASPE</div>
+    <h1>Painel de Operações</h1>
+    <div class="sub">Entre com seu email e senha para sincronizar seu plano em todos os dispositivos.</div>
+    <div id="authConfigWarning" class="auth-config-warning" style="display:none;"></div>
+    <form id="authForm" onsubmit="handleAuthSubmit('signin'); return false;">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="auth-email" autocomplete="email" placeholder="voce@email.com">
+      </div>
+      <div class="auth-field">
+        <label>Senha</label>
+        <input type="password" id="auth-password" autocomplete="current-password" placeholder="mínimo 6 caracteres">
+      </div>
+      <div class="auth-msg" id="auth-error"></div>
+      <button type="button" class="auth-btn" id="auth-submit-btn" onclick="handleAuthSubmit('signin')">Entrar</button>
+    </form>
+    <div class="auth-switch">Ainda não tem conta? <a onclick="handleAuthSubmit('signup')">Criar conta</a></div>
+  </div>
+</div>
+
+<div id="shell" style="display:none;">
   <aside id="sidebar">
     <div class="brand">
       <div class="tag">SEAD/MA · CEBRASPE</div>
       <h1>Painel de<br>Operações</h1>
       <div class="sub">Soldado QP — PMMA 2026</div>
     </div>
+    <div id="userBadge" style="display:none;">
+      <span class="em" id="userBadgeEmail"></span>
+      <button onclick="handleLogout()">Sair</button>
+    </div>
     <nav class="tabs" id="navTabs"></nav>
-    <div class="foot">Edital nº 1 – PMMA<br>10/07/2026 · Cargo 1 (QP)<br>Dados salvos neste navegador.</div>
+    <div class="foot">Edital nº 1 – PMMA<br>10/07/2026 · Cargo 1 (QP)<br><span id="footStorageMsg">Dados sincronizados via Supabase.</span></div>
   </aside>
 
   <main id="main">
@@ -252,6 +304,8 @@
     </div>
   </main>
 </div>
+
+<div id="saveIndicator"></div>
 
 <script>
 /* =========================================================
@@ -384,22 +438,121 @@ const CONFIG = {
 
 
 
-async function loadData(){
+/* =========================================================
+   SUPABASE — CONFIG E AUTENTICAÇÃO
+   ========================================================= */
+const SUPABASE_URL = 'https://osjzsiposyqbfkzppurh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zanpzaXBvc3lxYmZrenBwdXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5OTE1NzQsImV4cCI6MjA5OTU2NzU3NH0.2ADGrKSWv5ZyGB7Wy8apUQMuyXijrbxKPVzSdzdj_Es';
+
+let sb = null;
+let CURRENT_USER = null;
+try{
+  if(window.supabase && SUPABASE_URL.startsWith('http')){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}catch(e){ console.error('Falha ao iniciar Supabase', e); }
+
+function translateAuthError(msg){
+  if(!msg) return 'Ocorreu um erro. Tente novamente.';
+  if(/invalid login credentials/i.test(msg)) return 'Email ou senha incorretos.';
+  if(/already registered|already exists/i.test(msg)) return 'Este email já tem conta. Clique em "Entrar".';
+  if(/password should be at least|password.*6/i.test(msg)) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if(/rate limit/i.test(msg)) return 'Muitas tentativas seguidas. Aguarde um instante e tente de novo.';
+  if(/network|fetch/i.test(msg)) return 'Não foi possível conectar ao Supabase. Verifique sua internet.';
+  return msg;
+}
+
+function showAuthScreen(){
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('shell').style.display = 'none';
+}
+function hideAuthScreen(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('shell').style.display = 'flex';
+}
+function setAuthMsg(text, isError){
+  const el = document.getElementById('auth-error');
+  el.textContent = text || '';
+  el.style.color = isError ? 'var(--danger)' : 'var(--green-ink)';
+}
+function setAuthLoading(loading){
+  const btn = document.getElementById('auth-submit-btn');
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Aguarde…' : 'Entrar';
+}
+
+async function handleAuthSubmit(mode){
+  if(!sb){ setAuthMsg('Supabase não configurado — verifique SUPABASE_URL e SUPABASE_ANON_KEY no código.', true); return; }
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if(!email || !password){ setAuthMsg('Preencha email e senha.', true); return; }
+  if(password.length < 6){ setAuthMsg('A senha precisa ter pelo menos 6 caracteres.', true); return; }
+  setAuthLoading(true); setAuthMsg('');
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      DATA = Object.assign(DATA, parsed);
+    if(mode==='signup'){
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      if(data.session){
+        // confirmação de email desativada: já entra direto
+      } else {
+        setAuthMsg('Conta criada! Verifique seu email para confirmar o cadastro e depois entre com "Entrar".', false);
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
     }
-  }catch(e){ /* nada salvo ainda */ }
+  }catch(e){
+    setAuthMsg(translateAuthError(e.message), true);
+  }finally{
+    setAuthLoading(false);
+  }
+}
+async function handleLogout(){
+  if(!sb) return;
+  await sb.auth.signOut();
+}
+
+/* =========================================================
+   ESTADO / PERSISTÊNCIA (Supabase — tabela planner_data)
+   ========================================================= */
+async function loadDataFromSupabase(){
+  if(!sb || !CURRENT_USER) return;
+  try{
+    const { data, error } = await sb.from('planner_data').select('data').eq('user_id', CURRENT_USER.id).maybeSingle();
+    if(error) throw error;
+    if(data && data.data){
+      DATA = Object.assign(DATA, data.data);
+    }
+  }catch(e){
+    console.error('Erro ao carregar dados do Supabase', e);
+    flashSaveIndicator('Não foi possível carregar seus dados salvos.', true);
+  }
+}
+function flashSaveIndicator(text, isError){
+  const el = document.getElementById('saveIndicator');
+  el.textContent = text;
+  el.className = 'show' + (isError?' error':'');
+  clearTimeout(flashSaveIndicator._t);
+  flashSaveIndicator._t = setTimeout(()=>{ el.className=''; }, 2200);
 }
 let saveTimeout=null;
 function saveData(){
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(async ()=>{
-    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(DATA), false); }
-    catch(e){ console.error('Falha ao salvar', e); }
-  }, 250);
+    if(!sb || !CURRENT_USER) return;
+    try{
+      const { error } = await sb.from('planner_data').upsert({
+        user_id: CURRENT_USER.id,
+        data: DATA,
+        updated_at: new Date().toISOString()
+      });
+      if(error) throw error;
+      flashSaveIndicator('Salvo ✓', false);
+    }catch(e){
+      console.error('Falha ao salvar no Supabase', e);
+      flashSaveIndicator('Falha ao salvar — verifique sua conexão', true);
+    }
+  }, 500);
 }
 
 /* =========================================================
@@ -1400,12 +1553,47 @@ function renderAll(){
 /* =========================================================
    INIT
    ========================================================= */
-(async function init(){
-  await loadData();
+async function bootAppForUser(user){
+  CURRENT_USER = user;
+  document.getElementById('userBadge').style.display = 'flex';
+  document.getElementById('userBadgeEmail').textContent = user.email;
+  hideAuthScreen();
+  await loadDataFromSupabase();
   if(!DATA.completedBlocks) DATA.completedBlocks = {};
   SCHEDULE = generateSchedule();
   initWeekAnchor();
   renderAll();
+}
+
+(async function init(){
+  if(!sb){
+    const warn = document.getElementById('authConfigWarning');
+    warn.style.display = 'block';
+    warn.textContent = 'Supabase não está configurado neste arquivo (SUPABASE_URL/SUPABASE_ANON_KEY). Preencha essas constantes no código para habilitar o login.';
+    showAuthScreen();
+    return;
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(session && session.user){
+    await bootAppForUser(session.user);
+  } else {
+    showAuthScreen();
+  }
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'SIGNED_IN' && session && session.user){
+      await bootAppForUser(session.user);
+    } else if(event === 'SIGNED_OUT'){
+      CURRENT_USER = null;
+      DATA = { progress:{}, hours:[], questions:[], errors:[], simulados:[], notes:'', completedBlocks:{} };
+      document.getElementById('userBadge').style.display = 'none';
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-password').value = '';
+      setAuthMsg('');
+      showAuthScreen();
+    }
+  });
 })();
 </script>
 </body>
