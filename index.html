@@ -1148,8 +1148,14 @@ function renderChecklist(){
         return `
         <div class="subj-block">
           <div class="subj-head ${isOpen?'open':''}" onclick="toggleChecklistSubject('${key}')">
-            <div class="subj-title" style="flex:1;margin-bottom:0;"><span class="name">${subj.name}</span><span class="pct mono">${done}/${subj.topics.length} · ${pct}%</span></div>
-            <span class="chev">▶</span>
+            <div class="subj-title" style="display:flex;align-items:center;gap:8px;flex:1;margin-bottom:0;">
+              <span class="name">${subj.name}</span>
+
+              ${key === "LI" ? `<button onclick="event.stopPropagation();window.open('https://qlegislacao.com.br/legismais/maranhao/lei6513?utm_source','_blank')" style="font-size:10px;padding:3px 8px;border:none;border-radius:6px;background:#C9A227;color:#fff;cursor:pointer;">📖 Lei</button>` : ""}
+
+              <span class="pct mono" style="margin-left:auto;">${done}/${subj.topics.length} · ${pct}%</span>
+          </div>            
+          <span class="chev">▶</span>
           </div>
           <div class="bar"><div style="width:${pct}%;background:${subj.color};"></div></div>
           <div class="subj-topics ${isOpen?'open':''}">
