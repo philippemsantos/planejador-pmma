@@ -918,8 +918,23 @@ function renderDashboard(){
         currentMission
         ? `
             <div class="card">
-                <div class="meta">${SUBJECTS[currentMission.subject].name}</div>
-                <p><strong>${currentMission.topicLabel}</strong></p>
+      <div style="display:flex;align-items:center;gap:8px;">
+
+        <div class="meta">${SUBJECTS[currentMission.subject].name}</div>
+
+        ${
+            currentMission.subject === "LI"
+            ? `<a href="https://qlegislacao.com.br/legismais/maranhao/lei6513?utm_source"
+              target="_blank"
+              onclick="event.stopPropagation()"
+              style="font-size:11px;background:#C9A227;color:#fff;padding:3px 8px;border-radius:6px;text-decoration:none;">
+              📖 Lei
+           </a>`
+          : ""
+      }
+
+      </div>               
+        <p><strong>${currentMission.topicLabel}</strong></p>
             </div>
         `
         : `
